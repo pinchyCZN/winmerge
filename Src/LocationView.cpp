@@ -182,7 +182,7 @@ void CLocationView::OnUpdate( CView* pSender, LPARAM lHint, CObject* pHint )
 }
 
 /** 
- * @brief Override for CMemDC to work.
+ * @brief Override for WM_CMemDC to work.
  */
 BOOL CLocationView::OnEraseBkgnd(CDC* pDC)
 {
@@ -404,7 +404,7 @@ void CLocationView::OnDraw(CDC* pDC)
 	CRect rc;
 	GetClientRect(&rc);
 
-	CMemDC dc(pDC, &rc);
+	WM_CMemDC dc(pDC, &rc);
 
 	COLORREF cr0 = CLR_NONE; // Left side color
 	COLORREF cr1 = CLR_NONE; // Right side color
@@ -962,7 +962,7 @@ void CLocationView::UpdateVisiblePos(int nTopLine, int nBottomLine)
 			CDC *pDC = GetDC();
 			if (m_pSavedBackgroundBitmap)
 			{
-				CMemDC dc(pDC);
+				WM_CMemDC dc(pDC);
 				// Clear previous visible rect
 				DrawBitmap(&dc, 0, 0, m_pSavedBackgroundBitmap);
 

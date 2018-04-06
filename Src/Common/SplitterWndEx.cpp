@@ -16,6 +16,9 @@
 #ifdef COMPILE_MULTIMON_STUBS
 #undef COMPILE_MULTIMON_STUBS
 #endif
+#if _MSC_VER >= 1600
+#define COMPILE_MULTIMON_STUBS
+#endif
 #include <multimon.h>
 
 #ifdef _DEBUG

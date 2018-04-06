@@ -2,7 +2,7 @@
 #define _MEMDC_H_
 
 //////////////////////////////////////////////////
-// CMemDC - memory DC
+// WM_CMemDC - memory DC
 //
 // Author: Keith Rule
 // Email:  keithr@europa.com
@@ -26,7 +26,7 @@
 // This class implements a memory Device Context which allows
 // flicker free drawing.
 
-class CMemDC : public CDC {
+class WM_CMemDC : public CDC {
 private:	
 	CBitmap		m_bitmap;		// Offscreen bitmap
 	CBitmap*	m_oldBitmap;	// bitmap originally found in CMemDC
@@ -35,7 +35,7 @@ private:
 	BOOL		m_bMemDC;		// TRUE if CDC really is a Memory DC.
 public:
 	
-	CMemDC(CDC* pDC, const CRect* pRect = NULL) : CDC()
+	WM_CMemDC(CDC* pDC, const CRect* pRect = NULL) : CDC()
 	{
 		ASSERT(pDC != NULL); 
 
@@ -77,7 +77,7 @@ public:
 		FillSolidRect(m_rect, pDC->GetBkColor());
 	}
 	
-	~CMemDC()	
+	~WM_CMemDC()	
 	{		
 		if (m_bMemDC) {
 			// Copy the offscreen bitmap onto the screen.
@@ -95,13 +95,13 @@ public:
 	}
 	
 	// Allow usage as a pointer	
-	CMemDC* operator->() 
+	WM_CMemDC* operator->() 
 	{
 		return this;
 	}	
 
 	// Allow usage as a pointer	
-	operator CMemDC*() 
+	operator WM_CMemDC*() 
 	{
 		return this;
 	}
