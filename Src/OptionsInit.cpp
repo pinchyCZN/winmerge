@@ -57,7 +57,7 @@ void CMergeApp::OptionsInit()
 	m_pOptions->InitOption(OPT_WORDDIFF_HIGHLIGHT, true);
 	m_pOptions->InitOption(OPT_WORDWRAP, false);
 	m_pOptions->InitOption(OPT_VIEW_LINENUMBERS, false);
-	m_pOptions->InitOption(OPT_DISABLE_SPLASH, false);
+	m_pOptions->InitOption(OPT_DISABLE_SPLASH, true);
 	m_pOptions->InitOption(OPT_VIEW_WHITESPACE, false);
 	m_pOptions->InitOption(OPT_CONNECT_MOVED_BLOCKS, 0);
 	m_pOptions->InitOption(OPT_SCROLL_TO_FIRST, false);
