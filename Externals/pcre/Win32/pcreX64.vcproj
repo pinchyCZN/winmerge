@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="pcre"
 	ProjectGUID="{D6B50065-7185-4E20-A499-E78276066E6F}"
 	RootNamespace="pcre"

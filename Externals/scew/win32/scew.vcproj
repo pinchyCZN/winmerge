@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="scew"
 	ProjectGUID="{E27D4F53-46B1-49EE-B00E-103D03E50F48}"
 	TargetFrameworkVersion="131072"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="elements"
 	ProjectGUID="{4C943AC7-0187-4AB9-A9DB-F1BE96E2E099}"
 	TargetFrameworkVersion="131072"

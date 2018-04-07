@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="shift_jis"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="8.00"
 	Name="Merge"
 	ProjectGUID="{9FDA4AF0-CCFD-4812-BDB9-53EFEDB32BDE}"
 	RootNamespace="Merge"
