@@ -80,11 +80,12 @@ public:
 	BOOL m_bOverwriteRecursive;  /**< If TRUE overwrite last used value of recursive */
 	ProjectFile * m_pProjectFile; /**< Project file (if loaded) */
 
+	CString m_strLeftBrowsePath; /**< Left path from browse dialog. */
+	CString m_strRightBrowsePath; /**< Right path from browse dialog. */
+
 // Implementation data
 private:
 	prdlg::CMoveConstraint m_constraint;
-	CString m_strLeftBrowsePath; /**< Left path from browse dialog. */
-	CString m_strRightBrowsePath; /**< Right path from browse dialog. */
 
 // Overrides
 	// ClassWizard generated virtual function overrides

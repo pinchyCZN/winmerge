@@ -63,6 +63,226 @@ static TCHAR OpenDlgHelpLocation[] = _T("::/htmlhelp/Open_paths.html");
 /////////////////////////////////////////////////////////////////////////////
 // COpenDlg dialog
 
+class DropStuff: public IDropTarget
+{
+
+public:
+	HWND hwnd;
+	DropStuff() { }
+	~DropStuff() {}
+	// IDropTarget
+	STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState,
+		POINTL pt, DWORD* pdwEffect);
+
+	
+	STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+
+	STDMETHODIMP DragLeave();
+
+	STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState,
+		POINTL pt, DWORD* pdwEffect);
+
+
+	STDMETHODIMP QueryInterface(REFIID riid, void **ppv)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP_(ULONG) AddRef()
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP_(ULONG) Release()
+	{
+		return S_OK;
+	}
+};
+
+static DropStuff droptarget;
+static HWND ghwnd=0;
+static HWND hwndTT=0;
+static COpenDlg *opendlg=0;
+static DWORD tick=0;
+
+HWND create_tooltip(HWND hwnd,char *tt_text,int x, int y)
+{
+	if((hwndTT==0) && (tt_text[0]!=0)){
+		hwndTT=CreateWindowEx(WS_EX_TOPMOST,
+			TOOLTIPS_CLASS,NULL,
+			WS_POPUP|TTS_NOPREFIX|TTS_ALWAYSTIP,        
+			CW_USEDEFAULT,CW_USEDEFAULT,
+			CW_USEDEFAULT,CW_USEDEFAULT,
+			hwnd,NULL,NULL,NULL);
+		if(hwndTT!=0){
+			TOOLINFO ti;
+			ti.cbSize = sizeof(TOOLINFO);
+			ti.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_ABSOLUTE;
+			ti.hwnd = hwndTT;
+			ti.uId = (UINT_PTR)hwndTT;
+			ti.lpszText = (LPWSTR)tt_text;
+			SendMessage(hwndTT,TTM_ADDTOOL,0,(LPARAM)&ti);
+			SendMessage(hwndTT,TTM_UPDATETIPTEXTA,0,(LPARAM)&ti);
+			SendMessage(hwndTT,TTM_SETMAXTIPWIDTH,0,640); //makes multiline tooltips
+			SendMessage(hwndTT,TTM_TRACKPOSITION,0,MAKELONG(x,y)); 
+			SendMessage(hwndTT,TTM_TRACKACTIVATE,TRUE,(LPARAM)&ti);
+		}
+	}
+	return hwndTT;
+}
+int update_tooltip_text(char *tt_text)
+{
+	int result=0;
+	if(hwndTT!=0){
+		TOOLINFO ti;
+		ti.cbSize = sizeof(TOOLINFO);
+		ti.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_ABSOLUTE;
+		ti.hwnd = hwndTT;
+		ti.uId = (UINT_PTR)hwndTT;
+		ti.lpszText = (LPWSTR)tt_text;
+		result=SendMessage(hwndTT,TTM_UPDATETIPTEXTA,0,(LPARAM)&ti);
+	}
+	return result;
+}
+HWND destroy_tooltip()
+{
+	if(hwndTT!=0){
+		DestroyWindow(hwndTT);
+		hwndTT=0;
+	}
+	return hwndTT;
+}
+int get_filenames(wchar_t *left,int llen,wchar_t *right,int rlen)
+{
+	int result=FALSE;
+	if(!opendlg)
+		return result;
+	wcsncpy(left,opendlg->m_strLeft.GetString(),llen);
+	wcsncpy(right,opendlg->m_strRight.GetString(),rlen);
+	result=TRUE;
+	return result;
+}
+int get_tooltip_msg(char *msg,int len,wchar_t *left,wchar_t *right)
+{
+	int shift=FALSE,ctrl=FALSE,alt=FALSE;
+	static char *cmsg="CTRL=left file";
+	static char *smsg="SHIFT=right file";
+	static char *fmt="%s\r\n%s\r\nLEFT=%S\r\nRIGHT=%S";
+	if(msg==0 || len<=0)
+		return FALSE;
+	shift=GetKeyState(VK_SHIFT)&0x8000;
+	ctrl=GetKeyState(VK_CONTROL)&0x8000;
+	if(ctrl)
+		_snprintf(msg,len,fmt,cmsg,"",left,right);
+	else if(shift)
+		_snprintf(msg,len,fmt,smsg,"",left,right);
+	else
+		_snprintf(msg,len,fmt,cmsg,smsg,left,right);
+	msg[len-1]=0;
+	return TRUE;
+}
+int process_drop(HWND hwnd,HDROP hdrop,int ctrl,int shift)
+{
+	int i,count;
+	if(!opendlg)
+		return FALSE;
+	count=DragQueryFile(hdrop,-1,NULL,0);
+	for(i=0;i<count;i++){
+		WCHAR str[1024];
+		str[0]=0;
+		DragQueryFile(hdrop,i,str,countof(str));
+		if(1==count){
+			if(ctrl){
+				opendlg->m_strLeft.SetString(str);
+			}else if(shift){
+				opendlg->m_strRight.SetString(str);
+			}else{
+				if(opendlg->m_strLeft.GetLength()==0)
+					opendlg->m_strLeft.SetString(str);
+				else if(opendlg->m_strRight.GetLength()==0)
+					opendlg->m_strRight.SetString(str);
+				else
+					opendlg->m_strLeft.SetString(str);
+			}
+		}else{
+			if(0==i){
+				opendlg->m_strLeft.SetString(str);
+			}else if(1==i){
+				opendlg->m_strRight.SetString(str);
+			}else{
+				break;
+			}
+		}
+	}
+	DragFinish(hdrop);
+	opendlg->m_ctlLeft.SetWindowText(opendlg->m_strLeft);
+	opendlg->m_ctlRight.SetWindowText(opendlg->m_strRight);
+	opendlg->UpdateData(TRUE);
+	opendlg->UpdateButtonStates();
+	return TRUE;
+}
+//	IDropTarget::DragEnter
+HRESULT DropStuff::DragEnter(IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	if(ghwnd!=0){
+		RECT rect={0};
+		char msg[MAX_PATH*3]={0};
+		wchar_t left[MAX_PATH]={0};
+		wchar_t right[MAX_PATH]={0};
+		GetWindowRect(ghwnd,&rect);
+		get_filenames(left,countof(left),right,countof(right));
+		get_tooltip_msg(msg,sizeof(msg),left,right);
+		create_tooltip(ghwnd,msg,rect.left,rect.top);
+	}
+	return S_OK;
+}
+
+//	IDropTarget::DragOver
+HRESULT DropStuff::DragOver(DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	char msg[MAX_PATH*3]={0};
+	DWORD delta,t;
+	t=GetTickCount();
+	delta=t-tick;
+	if(delta>250){
+		wchar_t left[MAX_PATH]={0};
+		wchar_t right[MAX_PATH]={0};
+		get_filenames(left,countof(left),right,countof(right));
+		get_tooltip_msg(msg,sizeof(msg),left,right);
+		update_tooltip_text(msg);
+		tick=t;
+	}
+	return S_OK;
+}
+
+//	IDropTarget::DragLeave
+HRESULT DropStuff::DragLeave()
+{
+	destroy_tooltip();
+	return S_OK;
+}
+
+//	IDropTarget::Drop
+HRESULT DropStuff::Drop(IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	FORMATETC fmtetc={CF_HDROP,NULL,DVASPECT_CONTENT,-1,TYMED_HGLOBAL};
+	STGMEDIUM stg;
+	//printf("drag drop\n");
+	if(S_OK==pDataObject->GetData(&fmtetc,&stg)){
+			process_drop(ghwnd,(HDROP)stg.hGlobal,GetKeyState(VK_CONTROL)&0x8000,
+						GetKeyState(VK_SHIFT)&0x8000);
+	}
+	destroy_tooltip();
+	return S_OK;
+}
+
+int register_drag_drop(HWND hwnd)
+{
+	ghwnd=hwnd;
+	return RegisterDragDrop(hwnd,&droptarget);
+}
+
+
 /**
  * @brief Standard constructor.
  */
@@ -73,6 +293,8 @@ COpenDlg::COpenDlg(CWnd* pParent /*=NULL*/)
 	, m_bRecurse(FALSE)
 	, m_pProjectFile(NULL)
 {
+	register_drag_drop(pParent->m_hWnd);
+	opendlg=this;
 }
 
 /**
@@ -80,6 +302,11 @@ COpenDlg::COpenDlg(CWnd* pParent /*=NULL*/)
  */
 COpenDlg::~COpenDlg()
 {
+	if(ghwnd)
+		RevokeDragDrop(ghwnd);
+	destroy_tooltip();
+	ghwnd=0;
+	opendlg=0;
 	delete m_pProjectFile;
 }
 

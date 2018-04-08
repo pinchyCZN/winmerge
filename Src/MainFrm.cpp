@@ -1055,7 +1055,7 @@ BOOL CMainFrame::DoFileOpen(LPCTSTR pszLeft /*=NULL*/, LPCTSTR pszRight /*=NULL*
 	PATH_EXISTENCE pathsType = GetPairComparability(strLeft, strRight);
 	if (pathsType == DOES_NOT_EXIST)
 	{
-		COpenDlg dlg;
+		COpenDlg dlg(this);
 		dlg.m_strLeft = strLeft;
 		dlg.m_strRight = strRight;
 		dlg.m_bRecurse = bRecurse;
