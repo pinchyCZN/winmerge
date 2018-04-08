@@ -162,7 +162,7 @@ int get_filenames(wchar_t *left,int llen,wchar_t *right,int rlen)
 	result=TRUE;
 	return result;
 }
-int get_tooltip_msg(char *msg,int len,wchar_t *left,wchar_t *right)
+int get_tooltip_msg(char *msg,int len,wchar_t *left,wchar_t *right,DWORD keystate)
 {
 	int shift=FALSE,ctrl=FALSE,alt=FALSE;
 	static char *cmsg="CTRL=left file";
@@ -170,12 +170,12 @@ int get_tooltip_msg(char *msg,int len,wchar_t *left,wchar_t *right)
 	static char *fmt="%s\r\n%s\r\nLEFT=%S\r\nRIGHT=%S";
 	if(msg==0 || len<=0)
 		return FALSE;
-	shift=GetKeyState(VK_SHIFT)&0x8000;
-	ctrl=GetKeyState(VK_CONTROL)&0x8000;
+	shift=keystate&MK_SHIFT;
+	ctrl=keystate&MK_CONTROL;
 	if(ctrl)
 		_snprintf(msg,len,fmt,cmsg,"",left,right);
 	else if(shift)
-		_snprintf(msg,len,fmt,smsg,"",left,right);
+		_snprintf(msg,len,fmt,"",smsg,left,right);
 	else
 		_snprintf(msg,len,fmt,cmsg,smsg,left,right);
 	msg[len-1]=0;
@@ -219,6 +219,8 @@ int process_drop(HWND hwnd,HDROP hdrop,int ctrl,int shift)
 	opendlg->m_ctlRight.SetWindowText(opendlg->m_strRight);
 	opendlg->UpdateData(TRUE);
 	opendlg->UpdateButtonStates();
+	if(opendlg->m_ctlOk.IsWindowEnabled())
+		PostMessage(opendlg->m_ctlOk.m_hWnd,BM_CLICK,0,0);
 	return TRUE;
 }
 //	IDropTarget::DragEnter
@@ -231,7 +233,7 @@ HRESULT DropStuff::DragEnter(IDataObject * pDataObject, DWORD grfKeyState, POINT
 		wchar_t right[MAX_PATH]={0};
 		GetWindowRect(ghwnd,&rect);
 		get_filenames(left,countof(left),right,countof(right));
-		get_tooltip_msg(msg,sizeof(msg),left,right);
+		get_tooltip_msg(msg,sizeof(msg),left,right,grfKeyState);
 		create_tooltip(ghwnd,msg,rect.left,rect.top);
 	}
 	return S_OK;
@@ -248,7 +250,7 @@ HRESULT DropStuff::DragOver(DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 		wchar_t left[MAX_PATH]={0};
 		wchar_t right[MAX_PATH]={0};
 		get_filenames(left,countof(left),right,countof(right));
-		get_tooltip_msg(msg,sizeof(msg),left,right);
+		get_tooltip_msg(msg,sizeof(msg),left,right,grfKeyState);
 		update_tooltip_text(msg);
 		tick=t;
 	}
@@ -269,8 +271,8 @@ HRESULT DropStuff::Drop(IDataObject * pDataObject, DWORD grfKeyState, POINTL pt,
 	STGMEDIUM stg;
 	//printf("drag drop\n");
 	if(S_OK==pDataObject->GetData(&fmtetc,&stg)){
-			process_drop(ghwnd,(HDROP)stg.hGlobal,GetKeyState(VK_CONTROL)&0x8000,
-						GetKeyState(VK_SHIFT)&0x8000);
+			process_drop(ghwnd,(HDROP)stg.hGlobal,grfKeyState & MK_CONTROL,
+						grfKeyState & MK_SHIFT);
 	}
 	destroy_tooltip();
 	return S_OK;
